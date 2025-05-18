@@ -1,3 +1,4 @@
+[🇬🇧 English](README.md) | [🇪🇪 Eesti keel](README.et.md)
 # 🪸 CoralChain – A Visual Gadget Collection for Exploring Blockchain Fundamentals
 
 **CoralChain** is a lightweight, web-based blockchain simulation framework built with Ruby and Sinatra. It brings together a collection of visual, interactive gadgets designed to illustrate key concepts such as blockchain structure, multi-node synchronization, and consensus mechanism comparison. This project offers an approachable and hands-on way to explore the fundamental behaviors of blockchain systems in simplified, illustrative scenarios.
