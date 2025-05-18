@@ -1,0 +1,40 @@
+<div class="dashboard-grid" style="margin-bottom: 20px;">
+  <div class="card">
+    <h3>⛓️ Chain Length</h3>
+    <p><%= @chain.length %> blocks</p>
+  </div>
+  <div class="card">
+    <h3>🧩 Active Nodes</h3>
+    <p>Node A, Node B, Node X</p>
+  </div>
+  <div class="card">
+    <h3>🏆 Main Chain</h3>
+    <% begin %>
+      <% node_a = NodeChain.new("A") %>
+      <% node_b = NodeChain.new("B") %>
+      <% main = NodeChain.compare_chains(node_a.chain, node_b.chain) %>
+      <% if main == :a %>
+        <p>🟢 Node A</p>
+      <% elsif main == :b %>
+        <p>🟢 Node B</p>
+      <% else %>
+        <p>⚠️ Undecided</p>
+      <% end %>
+    <% rescue %>
+      <p>⚠️ Error</p>
+    <% end %>
+  </div>
+</div>
+
+<h2 style="margin-top: 10px;">🚀 Quick Access</h2>
+
+<div class="dashboard-grid">
+  <a href="/add" class="card">➕<br><span>Add Block</span></a>
+  <a href="/verify" class="card">🔍<br><span>Verify Chain</span></a>
+  <a href="/simulate" class="card">📈<br><span>Benchmark</span></a>
+  <a href="/compare_consensus" class="card">📊<br><span>Compare</span></a>
+  <a href="/experiment" class="card">⚙️<br><span>PoW Test</span></a>
+  <a href="/nodes" class="card">🌐<br><span>Multi-Node</span></a>
+  <a href="/gossip" class="card">📡<br><span>Gossip Sim</span></a>
+  <a href="/fork" class="card">⛓️<br><span>Fork Demo</span></a>
+</div>

@@ -1,0 +1,46 @@
+<h2>📊 PoW Difficulty Impact Experiment Result</h2>
+
+<div class="card">
+  <p><strong>Trials per difficulty:</strong> <%= @trials %></p>
+</div>
+
+<div class="chart-container">
+  <canvas id="difficultyChart" width="800" height="400"></canvas>
+</div>
+
+<form action="/experiment/export_csv" method="post" style="margin-top: 20px;">
+  <input type="hidden" name="trials" value="<%= @trials %>">
+  <input type="hidden" name="difficulties" value="<%= @results.map { |r| r[:difficulty] }.join(',') %>">
+  <input type="submit" value="📥 Download CSV">
+</form>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const difficulties = <%= @results.map { |r| r[:difficulty] } %>;
+  const avgTimes = <%= @results.map { |r| r[:avg] } %>;
+
+  const ctx = document.getElementById('difficultyChart').getContext('2d');
+  const difficultyChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: difficulties.map(d => `Difficulty ${d}`),
+      datasets: [{
+        label: 'Avg Time (ms)',
+        data: avgTimes,
+        borderColor: '#ff6f61',
+        backgroundColor: 'rgba(255,111,97,0.2)',
+        tension: 0.3,
+        fill: true,
+        pointRadius: 5,
+        pointHoverRadius: 7
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { beginAtZero: true, title: { display: true, text: "Milliseconds" } },
+        x: { title: { display: true, text: "Difficulty Level" } }
+      }
+    }
+  });
+</script>

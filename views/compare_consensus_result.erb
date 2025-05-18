@@ -1,0 +1,75 @@
+<h2>📊 Consensus Mechanism Comparison</h2>
+
+<div class="dashboard-grid">
+  <% @results.each do |res| %>
+    <div class="card">
+      <h3><%= res[:method].to_s.upcase %></h3>
+      <p><strong>Avg:</strong> <%= res[:avg] %> ms</p>
+      <p><strong>Min:</strong> <%= res[:min] %> ms</p>
+      <p><strong>Max:</strong> <%= res[:max] %> ms</p>
+      <p><strong>Std Dev:</strong> <%= res[:stddev] %> ms</p>
+    </div>
+  <% end %>
+</div>
+
+<div class="chart-container">
+  <canvas id="consensusBarChart" width="800" height="400"></canvas>
+</div>
+
+<form action="/compare_consensus/export_csv" method="post" style="margin-top: 20px;">
+  <input type="hidden" name="trials" value="<%= @trials %>">
+  <input type="submit" value="📥 Download CSV">
+</form>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('consensusBarChart').getContext('2d');
+
+  const barChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: <%= @results.map { |r| r[:method].to_s.upcase } %>,
+      datasets: [{
+        label: 'Average Time (ms)',
+        data: <%= @results.map { |r| r[:avg] } %>,
+        backgroundColor: ['#ff6f61', '#42a5f5', '#66bb6a'],
+        borderColor: ['#ff6f61', '#42a5f5', '#66bb6a'],
+        borderWidth: 1,
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const method = context.label;
+              const value = context.raw;
+              return `${method}: ${value} ms`;
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: "Milliseconds" }
+        },
+        x: {
+          title: { display: true, text: "Consensus Mechanism" },
+          ticks: {
+            autoSkip: false,
+            maxRotation: 0,
+            minRotation: 0,
+            font: {
+              size: 14,
+              weight: 'bold'
+            }
+          }
+        }
+      }
+    }
+  });
+</script>

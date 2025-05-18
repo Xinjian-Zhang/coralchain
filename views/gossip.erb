@@ -1,0 +1,275 @@
+<h2>📡 Gossip Propagation Simulation</h2>
+<p>This demo simulates realistic gossip protocol:<br>
+- Concurrent broadcast with random delays<br>
+- <span style="color:#4CAF50">Green</span> = honest, <span style="color:#f44336">Red</span> = fake</p>
+
+<div id="gossip-network" class="gossip-container">
+  <div class="node" id="A">A</div>
+  <div class="node" id="B">B</div>
+  <div class="node" id="C">C</div>
+  <div class="node" id="D">D</div>
+  <div class="node" id="E">E</div>
+  <div class="node" id="F">F</div>
+  <div class="node" id="G">G</div>
+  <div class="node" id="X">X</div>
+  <svg id="gossip-lines" width="100%" height="100%"></svg>
+</div>
+
+<div class="controls">
+  <button id="btnHonest" onclick="startGossip()">🚀 Honest Gossip from A</button>
+  <button id="btnFake" onclick="fakeGossip()">☠️ Fake Gossip from X</button>
+</div>
+
+<div id="tooltip" class="tooltip" style="display: none;"></div>
+
+<script>
+  const graph = {
+    A: ["B", "C", "D"],
+    B: ["E"],
+    C: ["F"],
+    D: ["G"],
+    X: ["C", "F"]
+  };
+
+  const nodeStates = {};
+  let currentPropagationId = 0;
+
+  const btnHonest = document.getElementById("btnHonest");
+  const btnFake = document.getElementById("btnFake");
+
+  function resetNodes() {
+    Object.keys(nodeStates).forEach(k => delete nodeStates[k]);
+    document.querySelectorAll('.node').forEach(n => {
+      n.style.backgroundColor = 'gray';
+      n.textContent = n.id;
+      n.title = '';
+    });
+    document.getElementById('tooltip').style.display = 'none';
+  }
+
+  function updateNodeDisplay(nodeId) {
+    const state = nodeStates[nodeId];
+    if (!state || !state.messages.length) {
+      const node = document.getElementById(nodeId);
+      node.style.backgroundColor = 'gray';
+      node.textContent = nodeId;
+      node.title = '';
+      return;
+    }
+
+    const lastMsg = state.messages[state.messages.length - 1];
+    const node = document.getElementById(nodeId);
+    node.style.backgroundColor = lastMsg.isFake ? '#f44336' : '#4CAF50';
+    node.textContent = `${nodeId}\n${lastMsg.time}ms\n(${state.count}×)`;
+
+    const tooltipLines = state.messages.map(m => `${m.from} - ${m.isFake ? 'Fake' : 'Honest'} @ ${m.time}ms`);
+    node.title = tooltipLines.join('\n');
+  }
+
+  function randomDelay() {
+    return 300 + Math.random() * 1200;
+  }
+
+  async function propagate(nodeId, isFake = false, time = 0, source = null, propagationId) {
+    if (propagationId !== currentPropagationId) return;
+
+    if (!nodeStates[nodeId]) {
+      nodeStates[nodeId] = { messages: [], count: 0 };
+    }
+
+    nodeStates[nodeId].messages.push({ from: source || 'origin', isFake, time: Math.floor(time) });
+    nodeStates[nodeId].count++;
+    updateNodeDisplay(nodeId);
+
+    const delay = randomDelay();
+    await new Promise(res => setTimeout(res, delay));
+
+    if (propagationId !== currentPropagationId) return;
+
+    const neighbors = graph[nodeId] || [];
+    await Promise.all(
+      neighbors.map(neighbor => 
+        propagate(neighbor, isFake, time + delay, nodeId, propagationId)
+      )
+    );
+  }
+
+  async function startGossip() {
+    if (btnHonest.disabled) return;
+    btnHonest.disabled = true;
+    btnFake.disabled = true;
+    resetNodes();
+    currentPropagationId++;
+    await propagate("A", false, 0, null, currentPropagationId);
+    btnHonest.disabled = false;
+    btnFake.disabled = false;
+  }
+
+  async function fakeGossip() {
+    if (btnFake.disabled) return;
+    btnHonest.disabled = true;
+    btnFake.disabled = true;
+    resetNodes();
+    currentPropagationId++;
+    await propagate("X", true, 0, null, currentPropagationId);
+    btnHonest.disabled = false;
+    btnFake.disabled = false;
+  }
+
+  function connectNodes() {
+    const svg = document.getElementById("gossip-lines");
+    svg.innerHTML = "";
+
+    const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+    const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+    marker.setAttribute("id", "arrow");
+    marker.setAttribute("markerWidth", "10");
+    marker.setAttribute("markerHeight", "7");
+    marker.setAttribute("refX", "10");
+    marker.setAttribute("refY", "3.5");
+    marker.setAttribute("orient", "auto");
+    marker.setAttribute("markerUnits", "strokeWidth");
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", "M0,0 L10,3.5 L0,7 Z");
+    path.setAttribute("fill", "rgba(255,111,97,0.8)");
+    marker.appendChild(path);
+    defs.appendChild(marker);
+    svg.appendChild(defs);
+
+    const edges = [
+      ["A", "B"], ["A", "C"], ["A", "D"],
+      ["B", "E"], ["C", "F"], ["D", "G"],
+      ["X", "C"], ["X", "F"]
+    ];
+
+    edges.forEach(([from, to]) => {
+      const f = document.getElementById(from);
+      const t = document.getElementById(to);
+
+      const fx = f.offsetLeft + f.offsetWidth / 2;
+      const fy = f.offsetTop + f.offsetHeight / 2;
+      const tx = t.offsetLeft + t.offsetWidth / 2;
+      const ty = t.offsetTop + t.offsetHeight / 2;
+
+      const dx = tx - fx;
+      const dy = ty - fy;
+      const dr = Math.sqrt(dx * dx + dy * dy) * 0.6;
+
+      const pathStr = `M${fx},${fy} Q${(fx+tx)/2 - dy*0.3},${(fy+ty)/2 + dx*0.3} ${tx},${ty}`;
+
+      const pathEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      pathEl.setAttribute("d", pathStr);
+      pathEl.setAttribute("stroke", "rgba(255, 111, 97, 0.8)");
+      pathEl.setAttribute("stroke-width", "2");
+      pathEl.setAttribute("fill", "none");
+      pathEl.setAttribute("marker-end", "url(#arrow)");
+      svg.appendChild(pathEl);
+    });
+  }
+
+  window.addEventListener("load", connectNodes);
+  window.addEventListener("resize", connectNodes);
+
+  document.querySelectorAll('.node').forEach(node => {
+    node.addEventListener("click", (e) => {
+      const id = node.id;
+      const state = nodeStates[id];
+      if (!state || !state.messages.length) return;
+
+      const tooltip = document.getElementById("tooltip");
+      let html = `<strong>Node ${id}</strong><br>`;
+      state.messages.forEach((m, i) => {
+        html += `#${i+1} From: ${m.from} - ${m.isFake ? '<span style="color:#f44336">Fake</span>' : '<span style="color:#4CAF50">Honest</span>'} - Time: ${m.time} ms<br>`;
+      });
+
+      tooltip.innerHTML = html;
+      tooltip.style.left = `${e.pageX + 10}px`;
+      tooltip.style.top = `${e.pageY - 20}px`;
+      tooltip.style.display = 'block';
+      e.stopPropagation();
+    });
+  });
+
+  document.body.addEventListener("click", (e) => {
+    if (!e.target.classList.contains("node")) {
+      document.getElementById("tooltip").style.display = "none";
+    }
+  });
+</script>
+
+<style>
+  .gossip-container {
+    position: relative;
+    width: 100%;
+    height: 440px;
+    margin-top: 30px;
+    background-color: var(--bg, #f5f5f5);
+    border-radius: 12px;
+    backdrop-filter: blur(6px);
+  }
+
+  .node {
+    position: absolute;
+    width: 65px;
+    height: 65px;
+    background-color: gray;
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    font-weight: bold;
+    padding-top: 10px;
+    font-size: 13px;
+    line-height: 1.2;
+    white-space: pre;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    user-select: none;
+  }
+
+  #A { top: 40px; left: 300px; }
+  #B { top: 140px; left: 180px; }
+  #C { top: 140px; left: 300px; }
+  #D { top: 140px; left: 420px; }
+  #E { top: 260px; left: 140px; }
+  #F { top: 260px; left: 300px; }
+  #G { top: 260px; left: 460px; }
+  #X { top: 30px; left: 500px; }
+
+  .controls {
+    margin-top: 20px;
+  }
+
+  button {
+    margin-right: 10px;
+    padding: 10px 20px;
+    font-weight: bold;
+    background-color: #ff6f61;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  button:hover:not(:disabled) {
+    background-color: #e45b4f;
+  }
+
+  button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+
+  .tooltip {
+    position: absolute;
+    background: var(--card, #fff);
+    color: var(--text, #333);
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    pointer-events: none;
+    z-index: 999;
+    white-space: nowrap;
+  }
+</style>

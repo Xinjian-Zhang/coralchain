@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  coralchain:
+    build: .
+    ports:
+      - "4567:4567"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - RACK_ENV=development

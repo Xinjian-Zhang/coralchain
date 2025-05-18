@@ -1,0 +1,110 @@
+<h2>📈 Consensus Benchmark Result</h2>
+
+<div class="card" style="border-radius: 12px; padding: 20px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+  <p><strong>Trials:</strong> <%= @trial_count %></p>
+  <p><strong>Mechanisms:</strong> PoW, PoA, PoS</p>
+</div>
+
+<button id="toggleScaleBtn" class="node-buttons" style="border-radius: 8px; padding: 10px 20px; background-color: #42a5f5; color: white; border: none; cursor: pointer; transition: background-color 0.3s; margin-top: 20px;">
+  Toggle Y-axis Scale (Linear / Logarithmic)
+</button>
+
+<div class="chart-container" style="margin-top: 20px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+  <canvas id="benchmarkLineChart" width="800" height="400"></canvas>
+</div>
+
+<form action="/compare_benchmark/export_csv" method="post" style="margin-top: 20px;">
+  <input type="hidden" name="trial_count" value="<%= @trial_count %>">
+  <input type="submit" value="📥 Download CSV" style="border-radius: 8px; padding: 10px 20px; background-color: #ff6f61; color: white; border: none; cursor: pointer;">
+</form>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('benchmarkLineChart').getContext('2d');
+
+  const labels = [...Array(<%= @trial_count %>).keys()].map(i => `Trial ${i + 1}`);
+
+  const colors = ['#ff6f61', '#42a5f5', '#66bb6a'];
+
+  const datasets = [
+    <% @series.each_with_index do |(label, data), i| %>
+      {
+        label: '<%= label %>',
+        data: <%= data %>,
+        borderColor: colors[<%= i %>],
+        backgroundColor: colors[<%= i %>],
+        tension: 0.3,
+        fill: false,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderWidth: 2,
+        hoverBorderWidth: 3
+      }<%= ',' unless i == @series.size - 1 %>
+    <% end %>
+  ];
+
+  let currentScale = 'linear';
+
+  const config = {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: datasets
+    },
+    options: {
+      responsive: true,
+      animation: { duration: 800, easing: 'easeInOutQuad' },
+      interaction: {
+        mode: 'nearest',
+        intersect: false,
+        axis: 'x'
+      },
+      plugins: {
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          callbacks: {
+            label: context => `${context.dataset.label}: ${context.parsed.y.toFixed(3)} ms`
+          }
+        },
+        legend: {
+          position: 'top',
+          labels: {
+            usePointStyle: true,
+            padding: 15,
+            font: { size: 14 }
+          }
+        }
+      },
+      scales: {
+        y: {
+          type: currentScale,
+          beginAtZero: true,
+          title: { display: true, text: "Milliseconds" },
+          min: 0,
+          ticks: {
+            callback: function(value) {
+              if (currentScale === 'logarithmic') {
+                return value === 0 ? '0' : value.toExponential(1);
+              }
+              return value;
+            }
+          }
+        },
+        x: {
+          title: { display: true, text: "Trials" },
+          ticks: { maxRotation: 45, minRotation: 30 }
+        }
+      }
+    }
+  };
+
+  const benchmarkChart = new Chart(ctx, config);
+
+  document.getElementById('toggleScaleBtn').addEventListener('click', () => {
+    currentScale = currentScale === 'linear' ? 'logarithmic' : 'linear';
+    benchmarkChart.options.scales.y.type = currentScale;
+    benchmarkChart.update();
+    document.getElementById('toggleScaleBtn').innerText = `Toggle Y-axis Scale (Current: ${currentScale})`;
+  });
+</script>

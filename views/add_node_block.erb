@@ -1,0 +1,18 @@
+<h2>Add Block to Node <%= @id %></h2>
+
+<form action="/nodes/add/<%= @id %>" method="post">
+  <label for="data">Block Data:</label>
+  <textarea name="data" rows="4" required></textarea>
+
+  <label for="consensus">Consensus Mechanism:</label>
+  <select name="consensus">
+    <option value="pow">Proof of Work (PoW)</option>
+    <option value="poa">Proof of Authority (PoA)</option>
+    <option value="pos">Proof of Stake (PoS)</option>
+  </select>
+
+  <br><br>
+  <input type="submit" value="Add Block to Node <%= @id %>">
+</form>
+
+<a href="/nodes">← Back to Nodes</a>

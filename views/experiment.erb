@@ -1,0 +1,83 @@
+<h2>🧪 PoW Difficulty Experiment</h2>
+<p>Test how mining time scales with increasing PoW difficulty (prefix-0 count).</p>
+
+<form id="pow-form" action="/experiment/result" method="post" class="card pow-form">
+  <label>Number of Blocks per Difficulty:</label>
+  <input type="number" name="trials" value="5" min="1" required>
+
+  <label>Difficulty Levels (Comma-Separated):</label>
+  <input type="text" name="difficulties" value="1,2,3" required>
+
+  <br><br>
+  <input id="submit-btn" type="submit" value="▶️ Run Experiment">
+</form>
+
+<!-- Loading Modal -->
+<div id="loading-modal" style="
+  display: none;
+  position: fixed;
+  top:0; left:0; right:0; bottom:0;
+  background: rgba(0,0,0,0.4);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+">
+  <div id="loading-box" style="
+    background: white;
+    padding: 1.5rem 2rem;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    text-align: center;
+    font-family: sans-serif;
+    font-weight: 600;
+    color: black;
+  ">
+    <div class="loader" style="
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #ff6f61;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 1rem;
+      animation: spin 1s linear infinite;
+    "></div>
+    Mining in progress, please wait...
+  </div>
+</div>
+
+<style>
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Dark mode support via prefers-color-scheme */
+@media (prefers-color-scheme: dark) {
+  #loading-modal {
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  #loading-box {
+    background: rgba(40, 40, 40, 0.95);
+    color: #f0f0f0;
+    box-shadow: 0 0 14px rgba(0, 0, 0, 0.6);
+  }
+
+  .loader {
+    border: 4px solid #444;
+    border-top: 4px solid #ff8a65; /* softer accent for dark mode */
+  }
+}
+</style>
+
+<script>
+  const form = document.getElementById('pow-form');
+  const submitBtn = document.getElementById('submit-btn');
+  const loadingModal = document.getElementById('loading-modal');
+
+  form.addEventListener('submit', () => {
+    loadingModal.style.display = 'flex';
+    submitBtn.disabled = true;
+    submitBtn.style.cursor = 'not-allowed';
+  });
+</script>

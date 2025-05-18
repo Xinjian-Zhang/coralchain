@@ -1,0 +1,168 @@
+<h2>🌐 Multi-Node Chain Sync Simulation</h2>
+<p>Compare blockchain states across Node A, Node B, and Node X (Byzantine). Red blocks indicate conflict, tampering, or invalid signature.</p>
+
+<style>
+  @media (min-width: 1200px) {
+    p.hash-text {
+      white-space: normal !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
+      word-break: break-all !important;
+    }
+  }
+</style>
+
+<% if params[:tampered] %>
+  <div class="sync-toast" style="background-color:#f44336">
+    ❌ Warning: A node has been tampered with. Chain verification failed.
+  </div>
+<% end %>
+
+<% if params[:synced] %>
+  <div class="sync-toast">
+    <% if params[:synced] == "AtoB" %>
+      ✅ Node A → Node B synced successfully.
+    <% elsif params[:synced] == "BtoA" %>
+      ✅ Node B → Node A synced successfully.
+    <% end %>
+  </div>
+<% end %>
+
+<% if params[:fake] %>
+  <div class="sync-toast" style="background-color:#f44336">
+    ⚠️ Fake chain created by Node X.
+  </div>
+<% end %>
+
+<% if params[:rejected] %>
+  <div class="sync-toast" style="background-color:#f44336">
+    ❌ Fake chain rejected. Node X failed to override honest nodes.
+  </div>
+<% end %>
+
+<% if params[:synced] =~ /Xto./ %>
+  <div class="sync-toast" style="background-color:#ff6f61">
+    ❗ Warning: Node X successfully replaced <%= params[:synced][-1] %>'s chain!
+  </div>
+<% end %>
+
+<% master = NodeChain.compare_chains(@node_a.chain, @node_b.chain) %>
+
+<div class="sync-toast">
+  <% if master == :a %>
+    ✅ Node A is the current main chain.
+  <% elsif master == :b %>
+    ✅ Node B is the current main chain.
+  <% else %>
+    ⚠️ Both chains are equal length or invalid.
+  <% end %>
+</div>
+
+
+<div class="blockchain-columns">
+  <!-- Node A -->
+  <div>
+    <div class="card">
+      <h3>🟢 Node A</h3>
+      <div class="node-buttons">
+        <a href="/nodes/add/A">➕ Add Block</a>
+        <a href="/attack?node=A">🗡️ Attack</a>
+        <a href="/export/A.csv">📥 CSV</a>
+        <a href="/export/A.md">📝 MD</a>
+      </div>
+      <% @node_a.chain.each_with_index do |block, i| %>
+        <div class="block <%= @diff[i] == :mismatch || !block.verify_signature ? 'invalid' : 'valid' %>">
+          <p><strong>Index:</strong> <%= block.index %></p>
+          <p><strong>Data:</strong> <%= block.data %></p>
+          <p class="hash-text" style="max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: monospace;">
+            <strong>Hash:</strong> <span><%= block.hash %></span>
+          </p>
+          <p><strong>Signature:</strong>
+            <% if block.verify_signature %>
+              ✅ <%= block.signature[0..16] %>...
+            <% else %>
+              ❌ <span style="color:red"><%= block.signature[0..16] %>...</span>
+            <% end %>
+          </p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Node B -->
+  <div>
+    <div class="card">
+      <h3>🟢 Node B</h3>
+      <div class="node-buttons">
+        <a href="/nodes/add/B">➕ Add Block</a>
+        <a href="/attack?node=B">🗡️ Attack</a>
+        <a href="/export/B.csv">📥 CSV</a>
+        <a href="/export/B.md">📝 MD</a>
+      </div>
+      <% @node_b.chain.each_with_index do |block, i| %>
+        <div class="block <%= @diff[i] == :mismatch || !block.verify_signature ? 'invalid' : 'valid' %>">
+          <p><strong>Index:</strong> <%= block.index %></p>
+          <p><strong>Data:</strong> <%= block.data %></p>
+          <p class="hash-text" style="max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: monospace;">
+            <strong>Hash:</strong> <span><%= block.hash %></span>
+          </p>
+          <p><strong>Signature:</strong>
+            <% if block.verify_signature %>
+              ✅ <%= block.signature[0..16] %>...
+            <% else %>
+              ❌ <span style="color:red"><%= block.signature[0..16] %>...</span>
+            <% end %>
+          </p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Node X -->
+  <div>
+    <div class="card" style="border-left: 6px solid #c62828;">
+      <h3 style="color:#c62828;">🚨 Node X (Byzantine)</h3>
+      <div class="node-buttons">
+        <a href="/attack/fake_chain">⚠️ Generate Fake</a>
+      </div>
+      <% NodeChain.new("X").chain.each do |block| %>
+        <div class="block invalid">
+          <p><strong>Index:</strong> <%= block.index %></p>
+          <p><strong>Data:</strong> <%= block.data %></p>
+          <p class="hash-text" style="max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: monospace;">
+            <strong>Hash:</strong> <span><%= block.hash %></span>
+          </p>
+          <p><strong>Signature:</strong>
+            <% if block.verify_signature %>
+              ✅ <%= block.signature[0..16] %>...
+            <% else %>
+              ❌ <span style="color:red"><%= block.signature[0..16] %>...</span>
+            <% end %>
+          </p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<!-- Action buttons -->
+<div class="dashboard-grid" style="margin-top: 30px;">
+  <form action="/nodes/sync" method="post">
+    <input type="submit" value="🔁 Sync A ↔ B (Longest Chain)">
+  </form>
+
+  <form action="/nodes/sync_x" method="post">
+    <input type="hidden" name="target" value="A">
+    <input type="submit" value="🧨 Replace Node A with Fake Chain">
+  </form>
+
+  <form action="/nodes/sync_x" method="post">
+    <input type="hidden" name="target" value="B">
+    <input type="submit" value="🧨 Replace Node B with Fake Chain">
+  </form>
+
+  <form action="/nodes/fork" method="post">
+    <input type="submit" value="🌿 Simulate Fork (A vs B)">
+  </form>
+
+</div>

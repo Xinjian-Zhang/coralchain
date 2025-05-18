@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>CoralChain</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon">
+  <style>
+    .navbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .nav-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .dropdown {
+      position: relative;
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      top: 30px;
+      left: 0;
+      flex-direction: column;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      z-index: 1001;
+    }
+
+    .dropdown-content a {
+      padding: 5px 10px;
+      white-space: nowrap;
+    }
+
+    .theme-toggle-btn {
+      font-size: 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 8px;
+      transition: color 0.2s ease;
+    }
+
+    .theme-toggle-btn:hover {
+      color: #ff6f61;
+    }
+
+    .dark-mode {
+      background-color: #121212;
+      color: white;
+    }
+
+    @font-face {
+      font-family: 'DayTimeGift';
+      src: url('/static/fonts/day_time_gift.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+  </style>
+</head>
+<body>
+
+<header style="position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(8px); box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 10px 20px;">
+<div style="display: flex; align-items: center; white-space: nowrap;">
+<img src="/static/images/logo_lc.png" alt="logo" style="height: 32px; margin-right: 8px;">
+<h1 style="margin: 0; font-family: 'DayTimeGift', sans-serif; font-size: 24px;">CoralChain</h1>
+</div>
+  <nav class="navbar">
+    <div class="nav-section">
+      <a href="/">🏠HOME</a>
+      <a href="/add">Add Block</a>
+      <a href="/verify">Verify</a>
+      <a href="/simulate">Benchmark</a>
+    </div>
+    <div class="nav-section dropdown">
+      <span class="dropdown-toggle">Advanced ▾</span>
+      <div class="dropdown-content">
+        <a href="/nodes">Multi-Node</a>
+        <a href="/experiment">PoW Difficulty Experiment</a>
+        <a href="/compare_consensus">Compare Consensus</a>
+      </div>
+    </div>
+    <div class="nav-section">
+      <button id="theme-toggle" class="theme-toggle-btn">🌙</button>
+    </div>
+  </nav>
+</header>
+
+<main style="padding: 100px 30px 40px;">
+  <%= yield %>
+</main>
+
+<footer style="
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  backdrop-filter: blur(10px);
+  border-top: 1px solid #ddd;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  font-size: 14px;
+  color: #666;
+  font-family: Arial, sans-serif;
+  z-index: 1100;
+">
+  <span>© 2025 Xinjian Zhang  | University of Tartu |</span>
+  <a href="https://github.com/xinjian-Zhang/coralchain" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; gap: 6px; color: #ff6f61; text-decoration: none; font-weight: 500;">
+    <svg height="20" width="20" viewBox="0 0 16 16" fill="#ff6f61" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+      <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8a8 8 0 005.47 7.59c.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2 .37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.22 2.2.82a7.6 7.6 0 012-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/>
+    </svg>
+    <span>Access on GitHub</span>
+  </a>
+</footer>
+
+<script>
+  window.onload = function () {
+    const toast = document.querySelector(".sync-toast");
+    if (toast) {
+      toast.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const toggle = document.querySelector(".dropdown-toggle");
+    const content = document.querySelector(".dropdown-content");
+
+    toggle.addEventListener("click", (e) => {
+      content.style.display = content.style.display === "flex" ? "none" : "flex";
+      e.stopPropagation();
+    });
+
+    document.addEventListener("click", () => {
+      content.style.display = "none";
+    });
+
+    const toggleBtn = document.getElementById('theme-toggle');
+    const darkClass = 'dark-mode';
+
+    function updateIcon() {
+      toggleBtn.textContent = document.body.classList.contains(darkClass) ? '🌞' : '🌙';
+    }
+
+    toggleBtn.addEventListener('click', () => {
+      document.body.classList.toggle(darkClass);
+      localStorage.setItem('theme', document.body.classList.contains(darkClass) ? 'dark' : 'light');
+      updateIcon();
+    });
+
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.body.classList.add(darkClass);
+    }
+    updateIcon();
+  });
+</script>
+
+</body>
+</html>

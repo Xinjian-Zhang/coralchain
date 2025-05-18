@@ -1,0 +1,21 @@
+<h2>Blockchain Attack Simulator</h2>
+<p>Manually modify a block’s content to simulate tampering. After saving, the chain will become invalid (highlighted in red).</p>
+
+<form action="/attack" method="post">
+  <input type="hidden" name="node" value="<%= @node_id %>">
+
+  <label for="index">Select Block Index (0 ~ <%= @node.chain.length - 1 %>):</label>
+  <select name="index">
+    <% @node.chain.each_with_index do |block, i| %>
+      <option value="<%= i %>">Index <%= i %> - <%= block.data[0..30] %></option>
+    <% end %>
+  </select>
+
+  <label for="data">New Block Data:</label>
+  <textarea name="data" rows="4" required>HACKED DATA</textarea>
+
+  <br><br>
+  <input type="submit" value="✖️ Tamper Block in Node <%= @node_id %>">
+</form>
+
+<a href="/nodes">← Back to Nodes</a>

@@ -1,0 +1,84 @@
+<h2>⛓️ Fork Chain Simulation</h2>
+<p>This simulation shows how chain forks occur and how the system selects the main chain using the <strong>Longest Valid Chain</strong> rule.</p>
+
+<div class="fork-info">
+  <% node_a = NodeChain.new("A") %>
+  <% node_b = NodeChain.new("B") %>
+  <% main = NodeChain.compare_chains(node_a.chain, node_b.chain) %>
+  <p><strong>Main Chain:</strong>
+    <% if main == :a %>
+      🟢 Node A (longest valid)
+    <% elsif main == :b %>
+      🟢 Node B (longest valid)
+    <% else %>
+      ⚠️ Undecided / Equal length
+    <% end %>
+  </p>
+</div>
+
+<div class="fork-container">
+  <div class="fork-column">
+    <h3>🟦 Node A Chain</h3>
+    <% node_a.chain.each_with_index do |block, index| %>
+      <% forked = (index >= node_b.chain.length) || (block.hash != node_b.chain[index].hash) %>
+      <div class="block <%= main == :a ? 'valid' : '' %> <%= forked ? 'forked' : '' %>">
+        <p><strong>Block #<%= block.index %></strong></p>
+        <p><small><%= block.hash[0..8] %>...</small></p>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="fork-column">
+    <h3>🟥 Node B Chain</h3>
+    <% node_b.chain.each_with_index do |block, index| %>
+      <% forked = (index >= node_a.chain.length) || (block.hash != node_a.chain[index].hash) %>
+      <div class="block <%= main == :b ? 'valid' : '' %> <%= forked ? 'forked' : '' %>">
+        <p><strong>Block #<%= block.index %></strong></p>
+        <p><small><%= block.hash[0..8] %>...</small></p>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<style>
+  .fork-container {
+    display: flex;
+    gap: 40px;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+
+  .fork-column {
+    flex: 1;
+    min-width: 300px;
+  }
+
+  .block {
+    background: var(--card);
+    border-left: 5px solid #aaa;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+  }
+
+  .block.valid {
+    border-left-color: var(--valid);
+    background-color: rgba(76, 175, 80, 0.1);
+  }
+
+  .block.forked {
+    border-left-color: var(--invalid);
+    background-color: rgba(244, 67, 54, 0.1);
+  }
+
+  .fork-info {
+    background: var(--card);
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+  }
+</style>
